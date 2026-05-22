@@ -62,12 +62,15 @@ While review mode is active, LocalReview installs buffer-local keymaps on normal
 | `[r` | n | Jump to previous review |
 | `<leader>rt` | n | Open Telescope review picker |
 | `<leader>re` | n | Export review comments to clipboard |
+| `<leader>rS` | n | Toggle review mode on/off |
 
 Stop review mode with:
 
 ```vim
 :LocalReviewStop
 ```
+
+Or press `<leader>rS` again to toggle it off.
 
 Check status with:
 

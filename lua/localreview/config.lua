@@ -9,6 +9,7 @@ M.defaults = {
     prev_review = "[r",
     telescope = "<leader>rt",
     export = "<leader>re",
+    start = "<leader>rS",
   },
   virtual_text = {
     enabled = true,

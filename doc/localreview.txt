@@ -112,6 +112,7 @@ which-key continues to discover and display them.
     `[r`            Jump to previous review
     `<leader>rt`    Telescope review picker
     `<leader>re`    Export review comments to clipboard
+    `<leader>rS`    Toggle review mode on/off
 
 ==============================================================================
 CONFIGURATION                                           *localreview-configuration*

@@ -6,8 +6,24 @@ function M.setup(opts)
 
   vim.api.nvim_set_hl(0, "LocalReviewStale", { default = true, link = "DiagnosticHint" })
 
+  M._register_global_key(config.values.keys)
   M._register_autocmds()
   M._register_user_commands()
+end
+
+---@param keys table|false
+function M._register_global_key(keys)
+  if keys == false or not keys.start or keys.start == "" then
+    return
+  end
+
+  vim.keymap.set("n", keys.start, function()
+    if require("localreview.session").is_active() then
+      require("localreview.mode").stop()
+    else
+      require("localreview.mode").start()
+    end
+  end, { desc = "LocalReview: Toggle review mode" })
 end
 
 function M._register_autocmds()

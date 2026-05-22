@@ -65,11 +65,21 @@ function M._register_keybindings(keys)
       { "n" },
       "LocalReview: Telescope reviews",
     },
+    {
+      keys.export,
+      function()
+        require("localreview.export").export()
+      end,
+      { "n" },
+      "LocalReview: Export review comments",
+    },
   }
 
   for _, binding in ipairs(bindings) do
     local lhs, rhs, modes, desc = binding[1], binding[2], binding[3], binding[4]
-    vim.keymap.set(modes, lhs, rhs, { desc = desc })
+    if lhs and lhs ~= "" then
+      vim.keymap.set(modes, lhs, rhs, { desc = desc })
+    end
   end
 end
 
@@ -143,6 +153,14 @@ function M._register_user_commands()
   vim.api.nvim_create_user_command("LocalReviewTelescope", function()
     require("localreview.telescope").picker()
   end, { desc = "LocalReview: Search all reviews via Telescope" })
+
+  vim.api.nvim_create_user_command("LocalReviewExport", function(cmd_opts)
+    require("localreview.export").export(cmd_opts.args)
+  end, { nargs = "?", complete = "file", desc = "LocalReview: Export review comments for a file or directory" })
+
+  vim.api.nvim_create_user_command("LocalReviewClear", function(cmd_opts)
+    require("localreview.clear").clear(cmd_opts.args)
+  end, { nargs = "?", complete = "file", desc = "LocalReview: Clear review comments for a file or directory" })
 end
 
 return M

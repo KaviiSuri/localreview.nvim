@@ -3,8 +3,7 @@ local M = {}
 ---@param git_root string absolute path to git root
 ---@return string[] list of absolute paths to review JSON files
 function M._find_review_files(git_root)
-  local pattern = git_root .. "/**/.*.reviews.json"
-  return vim.fn.glob(pattern, false, true)
+  return require("localreview.review_files").find_review_files(git_root)
 end
 
 ---@return table[] entries sorted by filepath then line number (D-11)
@@ -26,11 +25,8 @@ function M._collect_entries()
   for _, review_file in ipairs(files) do
     local data = storage.read_reviews(review_file)
     if data and data.reviews then
-      local dir = vim.fn.fnamemodify(review_file, ":h")
-      local name = vim.fn.fnamemodify(review_file, ":t")
-      local source_name = name:match("^%.(.+)%.reviews%.json$")
-      if source_name then
-        local source_path = dir .. "/" .. source_name
+      local source_path = require("localreview.review_files").source_path_from_review_file(review_file)
+      if source_path then
         local rel_path = vim.fn.fnamemodify(source_path, ":~:.")
 
         for line_key, reviews in pairs(data.reviews) do

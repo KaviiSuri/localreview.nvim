@@ -1,9 +1,21 @@
 local M = {}
 
----@param filepath string absolute path to any file in the repo
+local function resolve_git_dir(path)
+  if not path or path == "" then
+    return vim.fn.getcwd()
+  end
+
+  if vim.fn.isdirectory(path) == 1 then
+    return path
+  end
+
+  return vim.fn.fnamemodify(path, ":h")
+end
+
+---@param filepath string absolute path to any file or directory in the repo
 ---@return string|nil SHA (40-char hex) or nil if not in a git repo
 function M.get_head_sha(filepath)
-  local dir = vim.fn.fnamemodify(filepath, ":h")
+  local dir = resolve_git_dir(filepath)
   local result = vim.fn.system("git -C " .. vim.fn.shellescape(dir) .. " rev-parse HEAD")
   if vim.v.shell_error ~= 0 then
     return nil
@@ -11,10 +23,10 @@ function M.get_head_sha(filepath)
   return vim.trim(result)
 end
 
----@param filepath string absolute path to any file in the repo
+---@param filepath string absolute path to any file or directory in the repo
 ---@return string|nil git root directory or nil
 function M.get_git_root(filepath)
-  local dir = vim.fn.fnamemodify(filepath, ":h")
+  local dir = resolve_git_dir(filepath)
   local result = vim.fn.system("git -C " .. vim.fn.shellescape(dir) .. " rev-parse --show-toplevel")
   if vim.v.shell_error ~= 0 then
     return nil

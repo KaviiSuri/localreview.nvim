@@ -12,6 +12,8 @@ No external dependencies. Pure Lua + Neovim API.
 - **Staleness detection** -- reviews track the git commit they were created on and flag when HEAD moves
 - **Navigation** -- jump between reviewed lines with `]r` / `[r` (wraps around)
 - **Telescope integration** -- search all reviews across the project (optional, telescope not required)
+- **Clipboard/headless export** -- export review comments in an agent-friendly format, with file paths, line numbers, and code snippets
+- **Path-scoped clearing** -- clear review files for a file or directory once everything is addressed
 - **File-local storage** -- reviews stored as hidden JSON files next to the source, easy to gitignore or share
 
 ## Requirements
@@ -50,6 +52,7 @@ require("localreview").setup()
 | `]r` | n | Jump to next review |
 | `[r` | n | Jump to previous review |
 | `<leader>rt` | n | Open Telescope review picker |
+| `<leader>re` | n | Export review comments to clipboard |
 
 To disable all default keybindings:
 
@@ -67,6 +70,8 @@ require("localreview").setup({ keys = false })
 | `:LocalReviewNext` | Jump to next review |
 | `:LocalReviewPrev` | Jump to previous review |
 | `:LocalReviewTelescope` | Telescope picker (requires telescope.nvim) |
+| `:LocalReviewExport [path]` | Export reviews for a file or directory. In UI mode, copies to clipboard; in headless mode, prints to stdout |
+| `:LocalReviewClear [path]` | Delete stored review comments for a file or directory |
 
 ## Configuration
 
@@ -81,6 +86,7 @@ require("localreview").setup({
     next_review = "]r",
     prev_review = "[r",
     telescope = "<leader>rt",
+    export = "<leader>re",
   },
   virtual_text = {
     enabled = true,
@@ -103,7 +109,25 @@ require("telescope").load_extension("localreview")
 
 Then use `:Telescope localreview` or the `<leader>rt` keybinding.
 
+## Export & Clear
+
+- `:LocalReviewExport` with no argument targets the current git repo root when available, otherwise the current working directory
+- `:LocalReviewExport path/to/file.ts` exports just that file's review comments
+- `:LocalReviewExport path/to/dir` exports all review comments under that directory
+- `:LocalReviewClear` follows the same targeting rules and removes the underlying `.reviews.json` files
+
+In normal Neovim UI sessions, export copies the formatted review text to your clipboard. In headless mode, it prints to stdout, which makes it suitable for agent skills and shell scripts:
+
+```sh
+nvim --headless '+LocalReviewExport' +qa
+nvim --headless '+LocalReviewClear' +qa
+```
+
 ## Integrations
+
+### Pi / coding agents
+
+A bundled skill lives at [`skills/local-review/SKILL.md`](skills/local-review/SKILL.md). Copy or symlink it into your agent's skills directory so the agent knows how to read and clear local review comments.
 
 ### Claude Code
 

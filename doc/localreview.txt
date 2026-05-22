@@ -40,6 +40,7 @@ With custom options:
         next_review = "]r",
         prev_review = "[r",
         telescope = "<leader>rt",
+        export = "<leader>re",
       },
       virtual_text = {
         enabled = true,
@@ -77,6 +78,14 @@ COMMANDS                                                *localreview-commands*
 *:LocalReviewTelescope*      Open Telescope picker with all reviews in the
                           project. Requires telescope.nvim.
 
+*:LocalReviewExport*         Export review comments for a file or directory.
+                          In normal UI sessions this copies the formatted
+                          export text to the clipboard. In headless sessions
+                          it prints to stdout.
+
+*:LocalReviewClear*          Delete stored review comments for a file or
+                          directory.
+
 ==============================================================================
 KEYBINDINGS                                             *localreview-keybindings*
 
@@ -88,6 +97,7 @@ Default keybindings (override via `keys` in setup):
     `]r`            Jump to next review
     `[r`            Jump to previous review
     `<leader>rt`    Telescope review picker
+    `<leader>re`    Export review comments to clipboard
 
 ==============================================================================
 CONFIGURATION                                           *localreview-configuration*
@@ -109,6 +119,41 @@ All options with their defaults:
 `git.track_commit`        (boolean, default: true)
                         Store git HEAD SHA with reviews and mark stale
                         reviews when HEAD changes.
+
+==============================================================================
+EXPORT / CLEAR                                          *localreview-export*
+
+`:LocalReviewExport [path]`
+
+Exports review comments in an agent-friendly text format. Each exported item
+includes the file path, line number or range, review text, and a current code
+snippet.
+
+When `[path]` is omitted, LocalReview targets the current git repo root when
+available, otherwise the current working directory.
+
+Examples:
+>vim
+    :LocalReviewExport
+    :LocalReviewExport src/app.ts
+    :LocalReviewExport src/components
+<
+
+Interactive Neovim sessions copy the export text to the clipboard. Headless
+sessions print the export text to stdout, which is useful for agents:
+>sh
+    nvim --headless '+LocalReviewExport' +qa
+<
+
+`:LocalReviewClear [path]`
+
+Deletes stored `.reviews.json` files for the selected file or directory. When
+`[path]` is omitted it uses the same default target as export.
+
+Example:
+>sh
+    nvim --headless '+LocalReviewClear' +qa
+<
 
 ==============================================================================
 TELESCOPE                                               *localreview-telescope*
@@ -169,6 +214,13 @@ To ignore review files in git, add to `.gitignore`:
 >
     *.reviews.json
 <
+
+==============================================================================
+SKILLS                                                  *localreview-skill*
+
+A bundled agent skill is available at `skills/local-review/SKILL.md`.
+Copy or symlink it into your agent's skills directory to teach the agent how
+to export and clear review comments.
 
 ==============================================================================
 KNOWN LIMITATIONS                                       *localreview-limitations*

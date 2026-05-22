@@ -1,5 +1,7 @@
 :LocalReviewAnnotate	localreview.txt	/*:LocalReviewAnnotate*
 :LocalReviewDelete	localreview.txt	/*:LocalReviewDelete*
+:LocalReviewClear	localreview.txt	/*:LocalReviewClear*
+:LocalReviewExport	localreview.txt	/*:LocalReviewExport*
 :LocalReviewNext	localreview.txt	/*:LocalReviewNext*
 :LocalReviewPrev	localreview.txt	/*:LocalReviewPrev*
 :LocalReviewTelescope	localreview.txt	/*:LocalReviewTelescope*
@@ -8,10 +10,12 @@ LocalReviewStale	localreview.txt	/*LocalReviewStale*
 localreview	localreview.txt	/*localreview*
 localreview-commands	localreview.txt	/*localreview-commands*
 localreview-configuration	localreview.txt	/*localreview-configuration*
+localreview-export	localreview.txt	/*localreview-export*
 localreview-health	localreview.txt	/*localreview-health*
 localreview-highlights	localreview.txt	/*localreview-highlights*
 localreview-keybindings	localreview.txt	/*localreview-keybindings*
 localreview-limitations	localreview.txt	/*localreview-limitations*
+localreview-skill	localreview.txt	/*localreview-skill*
 localreview-staleness	localreview.txt	/*localreview-staleness*
 localreview-storage	localreview.txt	/*localreview-storage*
 localreview-telescope	localreview.txt	/*localreview-telescope*

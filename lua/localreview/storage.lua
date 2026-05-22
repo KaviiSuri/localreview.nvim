@@ -11,13 +11,15 @@ end
 ---@param comment string review comment text
 ---@param end_line number|nil end line for range reviews
 ---@param commit string|nil git HEAD SHA at time of creation
----@return table review entry with comment, timestamp, end_line, commit
-function M.new_review_entry(comment, end_line, commit)
+---@param session_name string|nil active review session name
+---@return table review entry with comment, timestamp, end_line, commit, session_name
+function M.new_review_entry(comment, end_line, commit, session_name)
   return {
     comment = comment,
     timestamp = os.time(),
     end_line = end_line or vim.NIL,
     commit = commit or vim.NIL,
+    session_name = session_name or vim.NIL,
   }
 end
 
@@ -76,6 +78,9 @@ function M.read_reviews(filepath)
         end
         if entry.commit == vim.NIL then
           entry.commit = nil
+        end
+        if entry.session_name == vim.NIL then
+          entry.session_name = nil
         end
       end
     end

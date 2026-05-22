@@ -6,81 +6,8 @@ function M.setup(opts)
 
   vim.api.nvim_set_hl(0, "LocalReviewStale", { default = true, link = "DiagnosticHint" })
 
-  if config.values.keys ~= false then
-    M._register_keybindings(config.values.keys)
-  end
-
   M._register_autocmds()
   M._register_user_commands()
-end
-
----@param keys table
-function M._register_keybindings(keys)
-  local bindings = {
-    {
-      keys.annotate,
-      function()
-        require("localreview.annotations").annotate()
-      end,
-      { "n", "v" },
-      "LocalReview: Annotate line",
-    },
-    {
-      keys.view,
-      function()
-        require("localreview.display").view_reviews()
-      end,
-      { "n" },
-      "LocalReview: View reviews",
-    },
-    {
-      keys.delete,
-      function()
-        require("localreview.annotations").delete_review()
-      end,
-      { "n" },
-      "LocalReview: Delete review",
-    },
-    {
-      keys.next_review,
-      function()
-        require("localreview.navigation").next_review()
-      end,
-      { "n" },
-      "LocalReview: Next review",
-    },
-    {
-      keys.prev_review,
-      function()
-        require("localreview.navigation").prev_review()
-      end,
-      { "n" },
-      "LocalReview: Previous review",
-    },
-    {
-      keys.telescope,
-      function()
-        require("localreview.telescope").picker()
-      end,
-      { "n" },
-      "LocalReview: Telescope reviews",
-    },
-    {
-      keys.export,
-      function()
-        require("localreview.export").export()
-      end,
-      { "n" },
-      "LocalReview: Export review comments",
-    },
-  }
-
-  for _, binding in ipairs(bindings) do
-    local lhs, rhs, modes, desc = binding[1], binding[2], binding[3], binding[4]
-    if lhs and lhs ~= "" then
-      vim.keymap.set(modes, lhs, rhs, { desc = desc })
-    end
-  end
 end
 
 function M._register_autocmds()
@@ -123,6 +50,13 @@ function M._register_autocmds()
       require("localreview.virtual_text").render_all(args.buf, data, stale_lines)
     end,
   })
+
+  vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
+    group = group,
+    callback = function(args)
+      require("localreview.mode").sync_buffer(args.buf)
+    end,
+  })
 end
 
 function M._register_user_commands()
@@ -155,12 +89,34 @@ function M._register_user_commands()
   end, { desc = "LocalReview: Search all reviews via Telescope" })
 
   vim.api.nvim_create_user_command("LocalReviewExport", function(cmd_opts)
-    require("localreview.export").export(cmd_opts.args)
-  end, { nargs = "?", complete = "file", desc = "LocalReview: Export review comments for a file or directory" })
+    require("localreview.export").export(cmd_opts.args, { include_all_sessions = cmd_opts.bang })
+  end, {
+    bang = true,
+    nargs = "?",
+    complete = "file",
+    desc = "LocalReview: Export review comments for a file or directory",
+  })
 
   vim.api.nvim_create_user_command("LocalReviewClear", function(cmd_opts)
-    require("localreview.clear").clear(cmd_opts.args)
-  end, { nargs = "?", complete = "file", desc = "LocalReview: Clear review comments for a file or directory" })
+    require("localreview.clear").clear(cmd_opts.args, { include_all_sessions = cmd_opts.bang })
+  end, {
+    bang = true,
+    nargs = "?",
+    complete = "file",
+    desc = "LocalReview: Clear review comments for a file or directory",
+  })
+
+  vim.api.nvim_create_user_command("LocalReviewStart", function(cmd_opts)
+    require("localreview.mode").start(cmd_opts.args)
+  end, { nargs = "?", desc = "LocalReview: Start review mode" })
+
+  vim.api.nvim_create_user_command("LocalReviewStop", function()
+    require("localreview.mode").stop()
+  end, { desc = "LocalReview: Stop review mode" })
+
+  vim.api.nvim_create_user_command("LocalReviewStatus", function()
+    require("localreview.mode").status()
+  end, { desc = "LocalReview: Show review mode status" })
 end
 
 return M

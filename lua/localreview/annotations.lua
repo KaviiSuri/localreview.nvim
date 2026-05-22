@@ -10,6 +10,12 @@ local function do_annotate(start_line, end_line)
     return
   end
 
+  local session_name = require("localreview.session").name()
+  if not session_name then
+    vim.notify("[localreview] Start review mode first with :LocalReviewStart [name]", vim.log.levels.WARN)
+    return
+  end
+
   local line_key = tostring(start_line)
   local review_file = storage.review_path(bufpath)
 
@@ -35,7 +41,7 @@ local function do_annotate(start_line, end_line)
     end
 
     local range_end = (end_line and end_line ~= start_line) and end_line or nil
-    local entry = storage.new_review_entry(comment, range_end, commit)
+    local entry = storage.new_review_entry(comment, range_end, commit, session_name)
     table.insert(data.reviews[line_key], entry)
     storage.write_reviews(review_file, data)
 

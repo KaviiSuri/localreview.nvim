@@ -18,6 +18,12 @@ user's normal Neovim setup.
 nvim --headless '+LocalReviewExport [path]' +qa
 ```
 
+If the user wants comments from every session regardless of the active one:
+
+```sh
+nvim --headless '+LocalReviewExport! [path]' +qa
+```
+
 Omit `path` unless the user asks for a specific file or directory.
 
 The export format includes:
@@ -31,6 +37,12 @@ The export format includes:
 
 ```sh
 nvim --headless '+LocalReviewClear [path]' +qa
+```
+
+Use `!` to clear all sessions instead of only the active one:
+
+```sh
+nvim --headless '+LocalReviewClear! [path]' +qa
 ```
 
 Omit `path` unless the user asks for a specific file or directory.

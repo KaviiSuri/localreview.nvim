@@ -25,19 +25,21 @@ describe("localreview.storage", function()
   end)
 
   describe("new_review_entry", function()
-    it("creates entry with comment and timestamp, nil end_line and commit", function()
+    it("creates entry with comment and timestamp, nil end_line, commit, and session_name", function()
       local entry = storage.new_review_entry("This is a comment", nil)
       assert.are.equal("This is a comment", entry.comment)
       assert.is_number(entry.timestamp)
       assert.are.equal(vim.NIL, entry.end_line)
       assert.are.equal(vim.NIL, entry.commit)
+      assert.are.equal(vim.NIL, entry.session_name)
     end)
 
     it("creates entry with end_line when provided", function()
-      local entry = storage.new_review_entry("Range comment", 20)
+      local entry = storage.new_review_entry("Range comment", 20, nil, "review-a")
       assert.are.equal("Range comment", entry.comment)
       assert.are.equal(20, entry.end_line)
       assert.are.equal(vim.NIL, entry.commit)
+      assert.are.equal("review-a", entry.session_name)
     end)
   end)
 
@@ -48,10 +50,10 @@ describe("localreview.storage", function()
         version = 1,
         reviews = {
           ["42"] = {
-            { comment = "Test comment", timestamp = 1711540800, end_line = vim.NIL, commit = vim.NIL },
+            { comment = "Test comment", timestamp = 1711540800, end_line = vim.NIL, commit = vim.NIL, session_name = "review-a" },
           },
           ["15"] = {
-            { comment = "Range review", timestamp = 1711540900, end_line = 20, commit = vim.NIL },
+            { comment = "Range review", timestamp = 1711540900, end_line = 20, commit = vim.NIL, session_name = vim.NIL },
           },
         },
       }
@@ -66,9 +68,11 @@ describe("localreview.storage", function()
       assert.are.equal(1711540800, read.reviews["42"][1].timestamp)
       assert.is_nil(read.reviews["42"][1].end_line)
       assert.is_nil(read.reviews["42"][1].commit)
+      assert.are.equal("review-a", read.reviews["42"][1].session_name)
       assert.are.equal("Range review", read.reviews["15"][1].comment)
       assert.are.equal(1711540900, read.reviews["15"][1].timestamp)
       assert.are.equal(20, read.reviews["15"][1].end_line)
+      assert.is_nil(read.reviews["15"][1].session_name)
     end)
 
     it("written JSON contains version=1 at top level", function()

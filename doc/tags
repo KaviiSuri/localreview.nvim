@@ -4,6 +4,9 @@
 :LocalReviewExport	localreview.txt	/*:LocalReviewExport*
 :LocalReviewNext	localreview.txt	/*:LocalReviewNext*
 :LocalReviewPrev	localreview.txt	/*:LocalReviewPrev*
+:LocalReviewStart	localreview.txt	/*:LocalReviewStart*
+:LocalReviewStatus	localreview.txt	/*:LocalReviewStatus*
+:LocalReviewStop	localreview.txt	/*:LocalReviewStop*
 :LocalReviewTelescope	localreview.txt	/*:LocalReviewTelescope*
 :LocalReviewView	localreview.txt	/*:LocalReviewView*
 LocalReviewStale	localreview.txt	/*LocalReviewStale*

@@ -12,8 +12,9 @@ No external dependencies. Pure Lua + Neovim API.
 - **Staleness detection** -- reviews track the git commit they were created on and flag when HEAD moves
 - **Navigation** -- jump between reviewed lines with `]r` / `[r` (wraps around)
 - **Telescope integration** -- search all reviews across the project (optional, telescope not required)
-- **Clipboard/headless export** -- export review comments in an agent-friendly format, with file paths, line numbers, and code snippets
-- **Path-scoped clearing** -- clear review files for a file or directory once everything is addressed
+- **Review mode** -- start a named review session, get buffer-local keymaps, and avoid global keybinding conflicts
+- **Clipboard/headless export** -- export review comments in an agent-friendly format, with file paths, line numbers, code snippets, and optional session filtering
+- **Path-scoped clearing** -- clear review files for a file or directory once everything is addressed, or just clear the active session
 - **File-local storage** -- reviews stored as hidden JSON files next to the source, easy to gitignore or share
 
 ## Requirements
@@ -42,7 +43,15 @@ Clone or add this repo to your runtimepath, then call:
 require("localreview").setup()
 ```
 
-## Keybindings
+## Review mode & keybindings
+
+Start review mode first:
+
+```vim
+:LocalReviewStart my-review
+```
+
+While review mode is active, LocalReview installs buffer-local keymaps on normal source buffers. This keeps which-key support intact while avoiding global conflicts with plugins like Octo.
 
 | Key | Mode | Action |
 |-----|------|--------|
@@ -54,7 +63,19 @@ require("localreview").setup()
 | `<leader>rt` | n | Open Telescope review picker |
 | `<leader>re` | n | Export review comments to clipboard |
 
-To disable all default keybindings:
+Stop review mode with:
+
+```vim
+:LocalReviewStop
+```
+
+Check status with:
+
+```vim
+:LocalReviewStatus
+```
+
+To disable the review-mode keybindings entirely:
 
 ```lua
 require("localreview").setup({ keys = false })
@@ -64,14 +85,19 @@ require("localreview").setup({ keys = false })
 
 | Command | Description |
 |---------|-------------|
-| `:LocalReviewAnnotate` | Add review (supports `:'<,'>LocalReviewAnnotate` for ranges) |
+| `:LocalReviewStart [name]` | Start review mode. If `name` is omitted, a timestamp-based review name is generated |
+| `:LocalReviewStop` | Stop review mode and remove LocalReview keymaps from buffers |
+| `:LocalReviewStatus` | Show the active review session, if any |
+| `:LocalReviewAnnotate` | Add review (supports `:'<,'>LocalReviewAnnotate` for ranges). Requires active review mode |
 | `:LocalReviewView` | View reviews on current line |
 | `:LocalReviewDelete` | Delete review on current line |
 | `:LocalReviewNext` | Jump to next review |
 | `:LocalReviewPrev` | Jump to previous review |
 | `:LocalReviewTelescope` | Telescope picker (requires telescope.nvim) |
-| `:LocalReviewExport [path]` | Export reviews for a file or directory. In UI mode, copies to clipboard; in headless mode, prints to stdout |
-| `:LocalReviewClear [path]` | Delete stored review comments for a file or directory |
+| `:LocalReviewExport [path]` | Export reviews for the active session within a file or directory. In UI mode, copies to clipboard; in headless mode, prints to stdout |
+| `:LocalReviewExport! [path]` | Export all sessions for a file or directory |
+| `:LocalReviewClear [path]` | Clear only the active session's stored review comments for a file or directory |
+| `:LocalReviewClear! [path]` | Delete all stored review comments for a file or directory |
 
 ## Configuration
 
@@ -112,6 +138,8 @@ Then use `:Telescope localreview` or the `<leader>rt` keybinding.
 ## Export & Clear
 
 - `:LocalReviewExport` with no argument targets the current git repo root when available, otherwise the current working directory
+- when review mode is active, export and clear default to the current named session
+- add `!` to export or clear all sessions regardless of the active session
 - `:LocalReviewExport path/to/file.ts` exports just that file's review comments
 - `:LocalReviewExport path/to/dir` exports all review comments under that directory
 - `:LocalReviewClear` follows the same targeting rules and removes the underlying `.reviews.json` files
@@ -135,7 +163,7 @@ The [thorn](https://github.com/aneveux/claude-garden/tree/master/plugins/thorn) 
 
 ## Storage Format
 
-Reviews are stored as hidden JSON files next to each source file:
+Reviews are stored as hidden JSON files next to each source file. Each review entry may also include a `session_name`, allowing named review sessions to be resumed by starting review mode with the same name again:
 
 ```
 foo.lua  ->  .foo.lua.reviews.json

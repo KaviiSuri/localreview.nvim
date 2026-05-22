@@ -3,6 +3,7 @@ local M = {}
 local review_files = require("localreview.review_files")
 local storage = require("localreview.storage")
 local git = require("localreview.git")
+local session = require("localreview.session")
 
 local function split_lines(text)
   local lines = {}
@@ -34,11 +35,19 @@ local function read_code_excerpt(source_path, start_line, end_line)
 end
 
 ---@param path string|nil
+---@param opts? { include_all_sessions?: boolean }
 ---@return table[]|nil, table|nil, string|nil
-function M.collect_entries(path)
+function M.collect_entries(path, opts)
+  opts = opts or {}
+
   local target, err = review_files.collect_review_files(path)
   if not target then
     return nil, nil, err
+  end
+
+  local active_session_name = nil
+  if not opts.include_all_sessions then
+    active_session_name = session.name()
   end
 
   local entries = {}
@@ -56,20 +65,23 @@ function M.collect_entries(path)
 
         for _, line_key in ipairs(line_keys) do
           for _, entry in ipairs(data.reviews[line_key]) do
-            local line_start = tonumber(line_key)
-            local line_end = entry.end_line
+            if not active_session_name or entry.session_name == active_session_name then
+              local line_start = tonumber(line_key)
+              local line_end = entry.end_line
 
-            entries[#entries + 1] = {
-              source_path = source_path,
-              display_path = review_files.display_path(source_path, target.target_path, target.kind),
-              line_start = line_start,
-              line_end = line_end,
-              comment = entry.comment,
-              timestamp = entry.timestamp,
-              commit = entry.commit,
-              is_stale = git.is_stale(entry.commit, current_sha),
-              code_excerpt = read_code_excerpt(source_path, line_start, line_end or line_start),
-            }
+              entries[#entries + 1] = {
+                source_path = source_path,
+                display_path = review_files.display_path(source_path, target.target_path, target.kind),
+                line_start = line_start,
+                line_end = line_end,
+                comment = entry.comment,
+                timestamp = entry.timestamp,
+                commit = entry.commit,
+                session_name = entry.session_name,
+                is_stale = git.is_stale(entry.commit, current_sha),
+                code_excerpt = read_code_excerpt(source_path, line_start, line_end or line_start),
+              }
+            end
           end
         end
       end
@@ -102,9 +114,12 @@ local function location(entry)
 end
 
 ---@param path string|nil
+---@param opts? { include_all_sessions?: boolean }
 ---@return string|nil, string|nil
-function M.path_export_text(path)
-  local entries, _, err = M.collect_entries(path)
+function M.path_export_text(path, opts)
+  opts = opts or {}
+
+  local entries, _, err = M.collect_entries(path, opts)
   if not entries then
     return nil, err
   end
@@ -115,8 +130,18 @@ function M.path_export_text(path)
 
   local lines = {
     "Please address the following local review comments.",
-    "",
   }
+
+  local active_session_name = nil
+  if not opts.include_all_sessions then
+    active_session_name = session.name()
+  end
+
+  if active_session_name then
+    lines[#lines + 1] = "Review session: " .. active_session_name
+  end
+
+  lines[#lines + 1] = ""
 
   for index, entry in ipairs(entries) do
     local stale_suffix = entry.is_stale and " [stale]" or ""
@@ -147,8 +172,9 @@ function M.path_export_text(path)
 end
 
 ---@param path string|nil
-function M.export(path)
-  local text, err = M.path_export_text(path)
+---@param opts? { include_all_sessions?: boolean }
+function M.export(path, opts)
+  local text, err = M.path_export_text(path, opts)
   if not text then
     vim.notify(err or "[localreview] Failed to export review comments.", vim.log.levels.WARN)
     return

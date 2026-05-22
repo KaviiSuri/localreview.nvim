@@ -1,5 +1,6 @@
 local storage = require("localreview.storage")
 local export = require("localreview.export")
+local session = require("localreview.session")
 
 describe("localreview.export", function()
   local tmpdir
@@ -10,6 +11,7 @@ describe("localreview.export", function()
   end)
 
   after_each(function()
+    session.stop()
     vim.fn.delete(tmpdir, "rf")
   end)
 
@@ -20,7 +22,7 @@ describe("localreview.export", function()
     local data = {
       reviews = {
         ["2"] = {
-          { comment = "Return a better value", timestamp = 1711540800, end_line = vim.NIL, commit = vim.NIL },
+          { comment = "Return a better value", timestamp = 1711540800, end_line = vim.NIL, commit = vim.NIL, session_name = "review-a" },
         },
       },
     }
@@ -44,7 +46,7 @@ describe("localreview.export", function()
     storage.write_reviews(storage.review_path(b), {
       reviews = {
         ["1"] = {
-          { comment = "Second file", timestamp = 20, end_line = vim.NIL, commit = vim.NIL },
+          { comment = "Second file", timestamp = 20, end_line = vim.NIL, commit = vim.NIL, session_name = vim.NIL },
         },
       },
     })
@@ -52,7 +54,7 @@ describe("localreview.export", function()
     storage.write_reviews(storage.review_path(a), {
       reviews = {
         ["1"] = {
-          { comment = "First file", timestamp = 10, end_line = vim.NIL, commit = vim.NIL },
+          { comment = "First file", timestamp = 10, end_line = vim.NIL, commit = vim.NIL, session_name = vim.NIL },
         },
       },
     })
@@ -61,6 +63,30 @@ describe("localreview.export", function()
     local first_idx = assert(text:find("a.lua:1", 1, true))
     local second_idx = assert(text:find("b.lua:1", 1, true))
     assert.is_true(first_idx < second_idx)
+  end)
+
+  it("filters to the active review session by default", function()
+    local source = tmpdir .. "/session.lua"
+    vim.fn.writefile({ "return 42" }, source)
+
+    storage.write_reviews(storage.review_path(source), {
+      reviews = {
+        ["1"] = {
+          { comment = "From review a", timestamp = 1, end_line = vim.NIL, commit = vim.NIL, session_name = "review-a" },
+          { comment = "From review b", timestamp = 2, end_line = vim.NIL, commit = vim.NIL, session_name = "review-b" },
+        },
+      },
+    })
+
+    session.start("review-a")
+    local text = assert(export.path_export_text(source))
+    assert.truthy(text:find("Review session: review-a", 1, true))
+    assert.truthy(text:find("From review a", 1, true))
+    assert.falsy(text:find("From review b", 1, true))
+
+    local all_text = assert(export.path_export_text(source, { include_all_sessions = true }))
+    assert.truthy(all_text:find("From review a", 1, true))
+    assert.truthy(all_text:find("From review b", 1, true))
   end)
 
   it("returns a friendly message when no reviews exist", function()
